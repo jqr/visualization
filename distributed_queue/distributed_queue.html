@@ -153,28 +153,27 @@
     var rects = svg.selectAll("rect.packet")
       .data(packets, function(d) { return d.id })
 
+    var delay = 0
+    rects.transition("", "waiting").ease("linear").duration(200)
+      .attr("x", function(d) { return d.queue*30 + 300 })
+      .attr("y", function(d) { return 400 - d.position*2 - d.ahead - d.remaining })
+      .style("opacity", 1)
     rects.enter()
       .append("rect")
         .attr("class", "packet")
         .attr("x", function(d) { return d.queue*30 + 300 })
-        .attr("y", function(d) { return 0 })
+        .attr("y", function(d) { return 300 - d.position*2 - d.ahead - d.remaining })
         .attr("width", 10)
         .attr("height", function(d) { return d.remaining; })
         .style("opacity", 0)
         .style("stroke", "none")
         .style("fill", function(d) { return colors(d.ownerId) })
-        .transition().ease("linear")
+        .transition("", "incoming").ease("linear").duration(200)
           .attr("y", function(d) { return 400 - d.position*2 - d.ahead - d.remaining })
           .style("opacity", 1)
-    rects.transition().ease("linear")
-      .attr("x", function(d) { return d.queue*30 + 300 })
-      .attr("y", function(d) { return 400 - d.position*2 - d.ahead - d.remaining })
-      .style("opacity", 1)
+          .delay(function(d, i) { delay = delay + 5; return delay })
     rects.exit()
-      .transition().ease("linear")
-        .attr("y", function(d) { return 500 })
-        .style("opacity", 0)
-
+      .remove()
   }
 
   queuer = rotatingQueue
@@ -188,7 +187,7 @@
     addPackets(1)
   }, 120)
 
-  setInterval(redraw, 150)
+  setInterval(redraw, 500)
   setInterval(removePackets, 1000)
 
 

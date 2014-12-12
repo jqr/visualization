@@ -112,14 +112,15 @@
     return queuesForKey[key][subQueueId]
   }
 
-  function addPackets(count, givenOwnerId) {
+  function addPackets(count, givenOwnerId, givenRemaining) {
     if (packets.length + count > 500) { return } // Safety
 
     for(var i=0; i<count; i++) {
-      ownerId = givenOwnerId == undefined ? Math.floor(Math.random() * 10) :  givenOwnerId
+      var ownerId = givenOwnerId == undefined ? Math.floor(Math.random() * 10) :  givenOwnerId
+      var remaining = givenRemaining == undefined ? Math.floor(Math.random() * 8) + 2 :  givenRemaining
       nextId++
       var queue = queuer(nextId, ownerId)
-      packets.push({id: nextId, ownerId: ownerId, queue: queue })
+      packets.push({id: nextId, ownerId: ownerId, queue: queue, remaining: remaining })
     }
   }
 
@@ -134,15 +135,20 @@
   }
 
   function redraw() {
-    positions = {}
+    var positions = {}
+    var aheads = {}
 
     // Anntotate
     packets.forEach(function(packet) {
       if (positions[packet.queue] === undefined) {
         positions[packet.queue] = 0
+        aheads[packet.queue] = 0
       }
       packet.position = positions[packet.queue]++
+      packet.ahead = aheads[packet.queue]
+      aheads[packet.queue] = aheads[packet.queue] + packet.remaining
     })
+
 
     var rects = svg.selectAll("rect.packet")
       .data(packets, function(d) { return d.id })
@@ -153,16 +159,16 @@
         .attr("x", function(d) { return d.queue*30 + 300 })
         .attr("y", function(d) { return 0 })
         .attr("width", 10)
-        .attr("height", 5)
+        .attr("height", function(d) { return d.remaining; })
         .style("opacity", 0)
         .style("stroke", "none")
         .style("fill", function(d) { return colors(d.ownerId) })
         .transition().ease("linear")
-          .attr("y", function(d) { return 400 - d.position*7 })
+          .attr("y", function(d) { return 400 - d.position*2 - d.ahead - d.remaining })
           .style("opacity", 1)
     rects.transition().ease("linear")
       .attr("x", function(d) { return d.queue*30 + 300 })
-      .attr("y", function(d) { return 400 - d.position*7 })
+      .attr("y", function(d) { return 400 - d.position*2 - d.ahead - d.remaining })
       .style("opacity", 1)
     rects.exit()
       .transition().ease("linear")
@@ -182,7 +188,7 @@
     addPackets(1)
   }, 120)
 
-  setInterval(redraw, 100)
+  setInterval(redraw, 150)
   setInterval(removePackets, 1000)
 
 

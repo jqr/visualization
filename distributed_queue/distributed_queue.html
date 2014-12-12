@@ -125,9 +125,15 @@
   }
 
   function removePackets() {
+    var workAmount = 2
     var newPackets = []
     for(i=0;i<packets.length;i++) {
-      if (packets[i].position != 0) {
+      if (packets[i].position == 0) {
+        packets[i].remaining = packets[i].remaining - workAmount
+        if (packets[i].remaining > 0) {
+          newPackets.push(packets[i])
+        }
+      } else {
         newPackets.push(packets[i])
       }
     }
@@ -158,6 +164,7 @@
       .attr("x", function(d) { return d.queue*30 + 300 })
       .attr("y", function(d) { return 400 - d.position*2 - d.ahead - d.remaining })
       .style("opacity", 1)
+      .attr("height", function(d) { return d.remaining; })
     rects.enter()
       .append("rect")
         .attr("class", "packet")

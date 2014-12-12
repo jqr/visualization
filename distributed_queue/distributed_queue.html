@@ -176,15 +176,15 @@
   for (var i=0; i<20; i++) {
     addPackets(1)
   }
-
   redraw()
+
   setInterval(function() {
-    for (var i=0; i<8; i++) {
-      addPackets(1)
-    }
-    redraw()
-    removePackets()
-  }, 1000)
+    addPackets(1)
+  }, 120)
+
+  setInterval(redraw, 100)
+  setInterval(removePackets, 1000)
+
 
 
 </script>

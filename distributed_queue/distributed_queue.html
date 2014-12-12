@@ -157,13 +157,14 @@
             packet.remaining = packet.remaining - remaining
             remaining = 0
           } else {
+            workers[i].queue = Math.floor(Math.random() * queueCount)
             // finished this packet
             remaining = remaining - packet.remaining
             packet.remaining = 0
           }
         } else {
-          // no packets to work in this queue
           workers[i].queue = Math.floor(Math.random() * queueCount)
+          // no packets to work in this queue
           break
         }
       }
@@ -179,6 +180,7 @@
   function redraw() {
     var positions = {}
     var aheads = {}
+    var workerPositions = {}
 
     // Anntotate
     packets.forEach(function(packet) {
@@ -189,6 +191,14 @@
       packet.position = positions[packet.queue]++
       packet.ahead = aheads[packet.queue]
       aheads[packet.queue] = aheads[packet.queue] + packet.remaining
+    })
+
+    // Anntotate
+    workers.forEach(function(worker) {
+      if (workerPositions[worker.queue] === undefined) {
+        workerPositions[worker.queue] = 0
+      }
+      worker.position = workerPositions[worker.queue]++
     })
 
 
@@ -224,11 +234,12 @@
     var delay = 0
     rects.transition("", "waiting").ease("linear").duration(200)
       .attr("x", function(d) { return d.queue*30 + 300 })
+      .attr("y", function(d) { return 400 + d.position*12 })
     rects.enter()
       .append("rect")
         .attr("class", "worker")
         .attr("x", function(d) { return d.queue*30 + 300 })
-        .attr("y", 400)
+        .attr("y", function(d) { return 400 + d.position*12 })
         .attr("width", 10)
         .attr("height", 10)
         .style("stroke", "none")

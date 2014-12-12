@@ -133,23 +133,43 @@
     }
   }
 
+  function nextPacket(queue) {
+    var nextPackets = {}
+    for(var i=0;i<packets.length;i++) {
+      if (packets[i].queue == queue) {
+        if (packets[i].remaining > 0) {
+          return packets[i]
+        }
+      }
+    }
+  }
+
   function removePackets() {
-    var workAmount = 0.2
+    var workAmount = 0.3
     var newPackets = []
     var workersPerQueue = {}
     for(var i=0;i<workers.length;i++) {
-      if (workersPerQueue[workers[i].queue] === undefined) {
-        workersPerQueue[workers[i].queue] = 0
+      var remaining = workAmount
+      while(remaining > 0) {
+        var packet = nextPacket(workers[i].queue)
+        if (packet) {
+          if (packet.remaining > remaining) {
+            packet.remaining = packet.remaining - remaining
+            remaining = 0
+          } else {
+            // finished this packet
+            remaining = remaining - packet.remaining
+            packet.remaining = 0
+          }
+        } else {
+          // no packets to work in this queue
+          workers[i].queue = Math.floor(Math.random() * queueCount)
+          break
+        }
       }
-      workersPerQueue[workers[i].queue]++
     }
     for(var i=0;i<packets.length;i++) {
-      if ((packets[i].position == 0) && workersPerQueue[packets[i].queue]) {
-        packets[i].remaining = packets[i].remaining - workAmount * workersPerQueue[packets[i].queue]
-        if (packets[i].remaining > 0) {
-          newPackets.push(packets[i])
-        }
-      } else {
+      if (packets[i].remaining > 0) {
         newPackets.push(packets[i])
       }
     }
@@ -204,8 +224,6 @@
     var delay = 0
     rects.transition("", "waiting").ease("linear").duration(200)
       .attr("x", function(d) { return d.queue*30 + 300 })
-      // .attr("y", function(d) { return 400 - d.position*2 - d.ahead - d.remaining })
-      // .style("opacity", 1)
     rects.enter()
       .append("rect")
         .attr("class", "worker")
@@ -215,8 +233,7 @@
         .attr("height", 10)
         .style("stroke", "none")
         .style("fill", "#000")
-        // .transition("", "incoming").ease("linear").duration(200)
-          // .style("opacity", 1)
+        .style("opacity", 0.2)
   }
 
   queuer = rotatingQueue
@@ -231,7 +248,7 @@
   }, 120)
 
   setInterval(redraw, 200)
-  setInterval(removePackets, 100)
+  setInterval(removePackets, 80)
 
 
 

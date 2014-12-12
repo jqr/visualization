@@ -6,6 +6,6 @@ You should be able to run the visualizations by cloning the repo, then opening t
 
 ## Distributed Queue
 
-[Demo](jqr.github.io/visualization/distributed_queue/distributed_queue.html)
+[Demo](http://jqr.github.io/visualization/distributed_queue/distributed_queue.html)
 
 ![](queue.gif)

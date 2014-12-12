@@ -91,7 +91,7 @@
   for(var i=0; i<10; i++) {
     workers.push({
       id: i,
-      queues: [i],
+      queues: [i, (i+1) % 10, (i+2) % 10],
       queue: i,
     })
   }
@@ -144,6 +144,11 @@
     }
   }
 
+  function newQueueForWorker(worker) {
+    var queues = worker.queues
+    worker.queue = queues[(queues.indexOf(worker.queue) + 1) % queues.length]
+  }
+
   function removePackets() {
     var workAmount = 0.3
     var newPackets = []
@@ -157,13 +162,12 @@
             packet.remaining = packet.remaining - remaining
             remaining = 0
           } else {
-            workers[i].queue = Math.floor(Math.random() * queueCount)
             // finished this packet
             remaining = remaining - packet.remaining
             packet.remaining = 0
           }
         } else {
-          workers[i].queue = Math.floor(Math.random() * queueCount)
+          newQueueForWorker(workers[i])
           // no packets to work in this queue
           break
         }
@@ -244,7 +248,7 @@
         .attr("height", 10)
         .style("stroke", "none")
         .style("fill", "#000")
-        .style("opacity", 0.2)
+        .style("opacity", 0.8)
   }
 
   queuer = rotatingQueue

@@ -19,6 +19,8 @@
   var colors = d3.scale.category10()
   var nextId = 0
 
+  function noop() {}
+
   var svg = d3.select("svg")
   svg.attr("width", 900)
   svg.attr("height", 500)
@@ -201,9 +203,10 @@
             // finished this packet
             remaining = remaining - packet.remaining
             packet.remaining = 0
+            workerDoneWithPacket(workers[i])
           }
         } else {
-          newQueueForWorker(workers[i])
+          workerAtEndOfQueue(workers[i])
           // no packets to work in this queue
           break
         }
@@ -232,6 +235,10 @@
   }
 
   heightIsRemaining()
+
+
+  var workerDoneWithPacket = noop
+  var workerAtEndOfQueue = newQueueForWorker
 
   function redraw() {
     var positions = {}

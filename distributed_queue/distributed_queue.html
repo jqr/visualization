@@ -14,7 +14,7 @@
 <svg id="svg"></svg>
 
 <script type="text/javascript">
-  var queueCount = 10
+  var queueCount = 20
 
   var colors = d3.scale.category10()
   var nextId = 0
@@ -124,11 +124,11 @@
   var packets = []
   var workers = []
 
-  for(var i=0; i<10; i++) {
+  for(var i=0; i<20; i++) {
     workers.push({
       id: i,
-      queues: [i, (i+1) % 10, (i+2) % 10],
-      queue: i,
+      queues: [i % queueCount, (i+1) % queueCount, (i+2) % queueCount],
+      queue: i % queueCount,
     })
   }
 
@@ -263,14 +263,13 @@
 
     var delay = 0
     rects.transition("", "waiting").ease("linear").duration(200)
-      .attr("x", function(d) { return d.queue*30 + 300 })
       .attr("y", heightY)
       .style("opacity", 1)
       .attr("height", height)
     rects.enter()
       .append("rect")
         .attr("class", "packet")
-        .attr("x", function(d) { return d.queue*30 + 300 })
+        .attr("x", function(d) { return d.queue*12 + 300 })
         .attr("y", function(d) { return heightY(d) - 100 })
         .attr("width", 10)
         .attr("height", height)
@@ -289,12 +288,12 @@
 
     var delay = 0
     rects.transition("", "waiting").ease("linear").duration(200)
-      .attr("x", function(d) { return d.queue*30 + 300 })
+      .attr("x", function(d) { return d.queue*12 + 300 })
       .attr("y", function(d) { return 400 + d.position*12 })
     rects.enter()
       .append("rect")
         .attr("class", "worker")
-        .attr("x", function(d) { return d.queue*30 + 300 })
+        .attr("x", function(d) { return d.queue*12 + 300 })
         .attr("y", function(d) { return 400 + d.position*12 })
         .attr("width", 10)
         .attr("height", 10)

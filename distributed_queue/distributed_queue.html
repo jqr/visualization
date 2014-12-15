@@ -14,7 +14,7 @@
 <svg id="svg"></svg>
 
 <script type="text/javascript">
-  var queueCount = 20
+  var queueCount = 30
 
   var colors = d3.scale.category10()
   var nextId = 0
@@ -126,7 +126,7 @@
   var packets = []
   var workers = []
 
-  for(var i=0; i<20; i++) {
+  for(var i=0; i<queueCount; i++) {
     workers.push({
       id: i,
       queues: [i % queueCount, (i+1) % queueCount, (i+2) % queueCount],

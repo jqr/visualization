@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <script type="text/javascript" src="../d3-3.5.2.min.js"></script>
+  <style type="text/css">
+  </style>
+</head>
+<body>
+
+<svg id="svg"></svg>
+
+<script type="text/javascript">
+  var events = []
+  var workers = []
+  var shards = {}
+
+  var newEvent = function(options) {
+    if (events.length == 0) {
+      options.id = 1
+    } else {
+      options.id = events[events.length - 1].id + 1
+    }
+    shards[options.shard] = true
+    events.push(options)
+  }
+  newEvent({shard: 0})
+  newEvent({shard: 1})
+  newEvent({shard: 1})
+  newEvent({shard: 2})
+  newEvent({shard: 2})
+  newEvent({shard: 2})
+
+  var newWorker = function(options) {
+    if (workers.length == 0) {
+      options.id = 1
+    } else {
+      options.id = workers[workers.length - 1].id + 1
+    }
+    options.start = 0
+    options.upTo = 0
+    workers.push(options)
+  }
+
+  newWorker({shard: 0})
+  newWorker({shard: 1})
+  newWorker({shard: 2})
+
+  var svg = d3.select("svg")
+  svg.attr("width", 900)
+  svg.attr("height", 500)
+  svg.style("background", "#eee")
+
+  var eventsSvg = svg.append("g").attr("id", "events")
+  var workersSvg = svg.append("g").attr("id", "workers")
+
+  var colors = d3.scale.category10()
+  var eventPositionToX = d3.scale.linear().domain([0, 50]).range([300, 0])
+
+
+  var doWork = function(worker) {
+    var newEvents = []
+    events.forEach(function(event) {
+      if ((event.shard == worker.shard) && (worker.upTo > 0)) {
+        worker.upTo--
+      } else {
+        newEvents.push(event)
+      }
+    })
+    events = newEvents
+  }
+
+  var captureAndDoWork = function(worker) {
+    captureWork(worker)
+    setTimeout(function() { doWork(worker) }, 900)
+    setTimeout(function() { captureAndDoWork(worker) }, 1100 + Math.random() * 300)
+  }
+
+  var captureWork = function(worker) {
+    worker.upTo = 0
+    events.forEach(function(event) {
+      if (event.shard == worker.shard) {
+        worker.upTo++
+      }
+    })
+  }
+
+  function redraw() {
+    // Annotate each event with data that is more easily used for drawing
+    Object.keys(shards).forEach(function(shard) {
+      shard = Number(shard)
+      var position = 0;
+      events.forEach(function(event) {
+        if (event.shard == shard) {
+          event.position = position++
+        }
+      })
+    })
+
+    // // Anntotate
+    // workers.forEach(function(worker) {
+    //   if (workerPositions[worker.shard] === undefined) {
+    //     workerPositions[worker.shard] = 0
+    //   }
+    //   worker.position = workerPositions[worker.shard]++
+    // })
+
+
+    var rects = eventsSvg.selectAll("rect.event")
+      .data(events, function(d) { return d.id })
+
+    var delay = 0
+    rects.transition("", "waiting").ease("linear").duration(200)
+      .attr("x", function(d) { return eventPositionToX(d.position) })
+      .style("opacity", 1)
+      .delay(0)
+      // .attr("height", 5)
+    rects.enter()
+      .append("rect")
+        .attr("class", "event")
+        .attr("z-index", 1)
+        .attr("x", 10)
+        .attr("y", 150)
+        .attr("width", 5)
+        .attr("height", 10)
+        .style("opacity", 0)
+        .style("stroke", "none")
+        .style("fill", function(d) { return colors(d.shard) })
+        .transition("", "incoming").ease("linear").duration(200)
+          .attr("x", function(d) { return eventPositionToX(d.position) })
+          .attr("y", function(d) { return d.shard*50 + 100 })
+          .style("opacity", 1)
+          // .delay(function(d, i) { delay = delay + 1; return delay })
+    rects.exit()
+      .remove()
+
+    var rects = workersSvg.selectAll("rect.worker")
+      .data(workers, function(d) { return d.id })
+
+    var delay = 0
+    rects.transition("", "waiting").ease("linear").duration(200)
+      .attr("x", function(d) { return eventPositionToX(d.upTo - 1) - 1 })
+      .attr("width", function(d) { return eventPositionToX(d.start) - eventPositionToX(d.upTo) + 1 })
+      .style("opacity", 0.5)
+      .delay(0)
+    rects.enter()
+      .append("rect")
+        .attr("class", "worker")
+        .attr("z-index", 0)
+        .attr("x", 10)
+        .attr("y", 155)
+        .attr("width", function(d) { return eventPositionToX(d.start) - eventPositionToX(d.upTo) + 1 })
+        .attr("height", 27)
+        .style("opacity", 0)
+        .style("stroke", "none")
+        .style("fill", "#000000")
+        .transition("", "incoming").ease("linear").duration(200)
+          .attr("x", function(d) { return eventPositionToX(d.upTo - 1) - 1 })
+          .attr("y", function(d) { return d.shard*50 + 100 - 1 })
+          .style("opacity", 0.5)
+          // .delay(function(d, i) { delay = delay + 1; return delay })
+    rects.exit()
+      .remove()
+
+  }
+
+  var addEvent = function() {
+    if (events.length < 100) {
+      newEvent({shard: Math.floor(Math.random() * 3)})
+    }
+  }
+
+  redraw()
+  setInterval(redraw, 200)
+  setInterval(addEvent, 40)
+  workers.forEach(function(worker) {
+    setTimeout(function() { captureAndDoWork(worker) }, Math.random() * 500)
+  })
+
+
+
+
+</script>
+</body>
+</html>
